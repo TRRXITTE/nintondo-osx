@@ -25,11 +25,7 @@ struct PriceWidget: Widget {
 
   @available(iOS 16.0, *)
   private var supportedFamilies: [WidgetFamily] {
-        if #available(iOSApplicationExtension 16.0, *) {
-            return [.systemSmall, .accessoryCircular, .accessoryInline, .accessoryRectangular]
-        } else {
-            return [.systemSmall]
-        }
+        return [.systemSmall, .accessoryCircular, .accessoryInline, .accessoryRectangular]
     }
 }
 

@@ -41,7 +41,7 @@ struct PriceView: View {
   
   @ViewBuilder
   private func wrappedView<Content: View>(for content: Content, family: WidgetFamily) -> some View {
-    if #available(iOSApplicationExtension 16.0, *) {
+    if #available(iOS 16.0, *) {
       ZStack {
         if family == .accessoryRectangular {
           AccessoryWidgetBackground()
