@@ -59,9 +59,12 @@ post_install do |installer|
       config.build_settings['SWIFT_SERIALIZE_DEBUGGING_OPTIONS'] = 'NO'
       # Disable user script sandboxing to fix module map lookup in Archive builds
       config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
-      # Output pods to the same BUILD_DIR as the main app so module maps are
-      # found during Archive (fixes "modulemap not found" in ArchiveIntermediates)
-      config.build_settings['CONFIGURATION_BUILD_DIR'] = '$(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)'
+      # Output pods to the same directory as the main app during Archive.
+      # During Archive, Xcode overrides SYMROOT to point to ArchiveIntermediates/
+      # and that override propagates to all workspace projects (including Pods).
+      # BUILD_DIR does NOT propagate this way, which is why pods ended up in the
+      # wrong place and module maps were not found.
+      config.build_settings['CONFIGURATION_BUILD_DIR'] = '$(SYMROOT)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)'
 
       if target.name == 'fmt'
         # Xcode 26's Apple clang currently rejects fmt's consteval format-string
