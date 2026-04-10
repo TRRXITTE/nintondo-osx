@@ -50,6 +50,7 @@ import { useExtendedNavigation } from '../../hooks/useExtendedNavigation';
 import { useKeyboard } from '../../hooks/useKeyboard';
 import loc, { formatBalance, formatBalanceWithoutSuffix } from '../../loc';
 import { BitcoinUnit, Chain } from '../../models/bitcoinUnits';
+import { formatFeeRateWithUnit, MIN_RELAY_FEE_RATE } from '../../models/feeRate';
 import NetworkTransactionFees, { NetworkTransactionFee, NetworkTransactionFeeType } from '../../models/networkTransactionFees';
 import { SendDetailsStackParamList } from '../../navigation/SendDetailsStackParamList';
 import { CommonToolTipActions, ToolTipAction } from '../../typings/CommonToolTipActions';
@@ -99,7 +100,7 @@ const SendDetails = () => {
   const [wallet, setWallet] = useState<TWallet | null>(null);
   const { isVisible } = useKeyboard();
   const [addresses, setAddresses] = useState<IPaymentDestinations[]>([{ address: '', key: String(Math.random()), unit: amountUnit }]);
-  const [networkTransactionFees, setNetworkTransactionFees] = useState(new NetworkTransactionFee(3, 2, 1));
+  const [networkTransactionFees, setNetworkTransactionFees] = useState(new NetworkTransactionFee());
   const [networkTransactionFeesIsLoading, setNetworkTransactionFeesIsLoading] = useState(false);
   const [customFee, setCustomFee] = useState<string | null>(null);
   const [selectedPresetFeeRate, setSelectedPresetFeeRate] = useState<string | null>(null);
@@ -111,8 +112,7 @@ const SendDetails = () => {
   const balance: number = utxos ? utxos.reduce((prev, curr) => prev + curr.value, 0) : (wallet?.getBalance() ?? 0);
   const allBalance = formatBalanceWithoutSuffix(balance, BitcoinUnit.BTC, true);
 
-  // if cutomFee is not set, we need to choose highest possible fee for wallet balance
-  // if there are no funds for even Slow option, use 1 sat/vbyte fee
+  // if customFee is not set, we need to choose highest possible fee for wallet balance
   const feeRate = useMemo(() => {
     console.log('SendDetails: feeRate useMemo - customFee:', customFee);
     console.log('SendDetails: feeRate useMemo - selectedPresetFeeRate:', selectedPresetFeeRate);
@@ -413,7 +413,7 @@ const SendDetails = () => {
   /**
    * TODO: refactor this mess, get rid of regexp, use https://github.com/bitcoinjs/bitcoinjs-lib/issues/890 etc etc
    *
-   * @param data {String} Can be address or `bitcoin:xxxxxxx` uri scheme, or invalid garbage
+   * @param data {String} Can be address or `bitcoin:xxxxxxx`/`nintondo:xxxxxxx` uri scheme, or invalid garbage
    */
 
   const processAddressData = useCallback(
@@ -433,7 +433,10 @@ const SendDetails = () => {
 
       const cl = new ContactList();
 
-      const dataWithoutSchema = data.replace('bitcoin:', '').replace('BITCOIN:', '');
+      const dataWithoutSchema = data
+        .trim()
+        .replace('://', ':')
+        .replace(/^(bitcoin|nintondo):/i, '');
       if (wallet.isAddressValid(dataWithoutSchema) || cl.isPaymentCodeValid(dataWithoutSchema)) {
         setAddresses(addrs => {
           addrs[scrollIndex.current].address = dataWithoutSchema;
@@ -447,7 +450,7 @@ const SendDetails = () => {
       let address = '';
       let options: TOptions;
       try {
-        if (!data.toLowerCase().startsWith('bitcoin:')) data = `bitcoin:${data}`;
+        if (!DeeplinkSchemaMatch.hasOnchainScheme(data)) data = `nintondo:${data}`;
         const decoded = DeeplinkSchemaMatch.bip21decode(data);
         address = decoded.address;
         options = decoded.options;
@@ -755,7 +758,7 @@ const SendDetails = () => {
         } catch {}
 
         try {
-          const txhex = possiblySignedPsbt.extractTransaction().toHex();
+          const txhex = possiblySignedPsbt.extractTransaction(true).toHex();
           navigation.navigate('PsbtWithHardwareWallet', { memo: transactionMemo, walletID: wallet.getID(), txhex });
           setIsLoading(false);
 
@@ -1448,12 +1451,16 @@ const SendDetails = () => {
   };
 
   const renderCustomFeeWarning = () => {
-    if (!customFee || Number(customFee) >= 1) return;
+    if (!customFee || Number(customFee) >= MIN_RELAY_FEE_RATE) return;
 
     return (
       <View style={[styles.warningContainer, stylesHook.warningContainer]}>
         <Text style={[styles.warningHeader, stylesHook.warningText]}>{loc.transactions.custom_fee_warning_title}</Text>
-        <Text style={stylesHook.warningText}>{loc.transactions.custom_fee_warning_description}</Text>
+        <Text style={stylesHook.warningText}>
+          {loc.formatString(loc.transactions.custom_fee_warning_description, {
+            min: formatFeeRateWithUnit(MIN_RELAY_FEE_RATE),
+          })}
+        </Text>
       </View>
     );
   };
@@ -1522,7 +1529,7 @@ const SendDetails = () => {
           ) : (
             <View style={[styles.feeRow, stylesHook.feeRow]}>
               <Text style={stylesHook.feeValue}>
-                {feePrecalc.current ? formatFee(feePrecalc.current) : feeRate + ' ' + loc.units.sat_vbyte}
+                {feePrecalc.current ? formatFee(feePrecalc.current) : formatFeeRateWithUnit(Number(feeRate))}
               </Text>
             </View>
           )}

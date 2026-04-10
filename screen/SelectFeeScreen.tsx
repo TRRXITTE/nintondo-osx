@@ -3,6 +3,17 @@ import { View, Text, TouchableOpacity, TextInput, StyleSheet, Keyboard } from 'r
 import { useTheme } from '../components/themes';
 import loc, { formatBalance } from '../loc';
 import { BitcoinUnit } from '../models/bitcoinUnits';
+import {
+  displayFeeRateToRawFeeRate,
+  FEE_RATE_UNIT_LABEL,
+  FAST_CONFIRMATION_LABEL,
+  formatFeeRate,
+  MEDIUM_CONFIRMATION_LABEL,
+  parseDisplayedFeeRate,
+  rawFeeRateToDisplayInput,
+  SLOW_CONFIRMATION_LABEL,
+  sanitizeFeeRateInput,
+} from '../models/feeRate';
 import { RouteProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { SendDetailsStackParamList } from '../navigation/SendDetailsStackParamList';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -123,7 +134,7 @@ const FeeOption: FC<FeeOptionProps> = ({ label, time, fee, rate, active, disable
       <View style={styles.feeModalRow}>
         <Text style={disabled ? stylesHook.feeOptionTextDisabled : stylesHook.feeOptionText}>{fee && formatFee(fee)}</Text>
         <Text style={disabled ? stylesHook.feeOptionTextDisabled : stylesHook.feeOptionText}>
-          {rate} {loc.units.sat_vbyte}
+          {formatFeeRate(rate)} {FEE_RATE_UNIT_LABEL}
         </Text>
       </View>
     </TouchableOpacity>
@@ -141,7 +152,7 @@ const SelectFeeScreen = () => {
   const { networkTransactionFees, feePrecalc, feeRate, feeUnit = BitcoinUnit.BTC, walletID, customFee } = route.params;
 
   const [state, dispatch] = useReducer(feeScreenReducer, {
-    customFeeValue: customFee || '',
+    customFeeValue: rawFeeRateToDisplayInput(customFee),
     isCustomFeeFocused: false,
     options: [],
     isCustomFeeSelected: false,
@@ -186,7 +197,7 @@ const SelectFeeScreen = () => {
     const options: FeeOption[] = [
       {
         label: loc.send.fee_fast,
-        time: loc.send.fee_10m,
+        time: FAST_CONFIRMATION_LABEL,
         fee: feePrecalc.fastestFee,
         rate: nf.fastestFee,
         feeType: NetworkTransactionFeeType.FAST,
@@ -194,7 +205,7 @@ const SelectFeeScreen = () => {
       },
       {
         label: loc.send.fee_medium,
-        time: loc.send.fee_3h,
+        time: MEDIUM_CONFIRMATION_LABEL,
         fee: feePrecalc.mediumFee,
         rate: nf.mediumFee,
         feeType: NetworkTransactionFeeType.MEDIUM,
@@ -203,7 +214,7 @@ const SelectFeeScreen = () => {
       },
       {
         label: loc.send.fee_slow,
-        time: loc.send.fee_1d,
+        time: SLOW_CONFIRMATION_LABEL,
         fee: feePrecalc.slowFee,
         rate: nf.slowFee,
         feeType: NetworkTransactionFeeType.SLOW,
@@ -229,21 +240,20 @@ const SelectFeeScreen = () => {
   );
 
   const handleCustomFeeChange = useCallback((value: string) => {
-    const cleanValue = value.replace(/[^\d.,]/g, '').replace(/([.,].*?)[.,]/g, '$1');
-    dispatch({ type: FeeScreenActions.SET_CUSTOM_FEE_VALUE, payload: cleanValue });
+    dispatch({ type: FeeScreenActions.SET_CUSTOM_FEE_VALUE, payload: sanitizeFeeRateInput(value) });
   }, []);
 
   const handleCustomFeeSubmit = useCallback(() => {
-    const numericValue = state.customFeeValue.replace(',', '.');
-    if (numericValue && Number(numericValue) >= 0) {
-      navigateWithFee(numericValue, NetworkTransactionFeeType.CUSTOM);
+    const displayFeeRate = parseDisplayedFeeRate(state.customFeeValue);
+    if (displayFeeRate !== null && displayFeeRate > 0) {
+      navigateWithFee(displayFeeRateToRawFeeRate(displayFeeRate).toString(), NetworkTransactionFeeType.CUSTOM);
     }
   }, [state.customFeeValue, navigateWithFee]);
 
   const handleCustomFeeBlur = useCallback(() => {
     dispatch({ type: FeeScreenActions.SET_CUSTOM_FEE_BLURRED });
-    const numericValue = Number(state.customFeeValue.replace(',', '.'));
-    if (!state.customFeeValue || numericValue < 0) {
+    const displayFeeRate = parseDisplayedFeeRate(state.customFeeValue);
+    if (!state.customFeeValue || displayFeeRate === null || displayFeeRate <= 0) {
       dispatch({ type: FeeScreenActions.CLEAR_CUSTOM_FEE });
     }
   }, [state.customFeeValue]);
@@ -292,7 +302,7 @@ const SelectFeeScreen = () => {
               <TextInput
                 ref={customFeeInputRef}
                 style={[styles.customFeeInput, stylesHook.customFeeInputColors]}
-                keyboardType="numeric"
+                keyboardType="decimal-pad"
                 placeholder={loc.send.insert_custom_fee}
                 value={state.customFeeValue}
                 placeholderTextColor={colors.placeholderTextColor}
@@ -305,8 +315,8 @@ const SelectFeeScreen = () => {
                 accessibilityLabel={loc.send.create_fee}
                 testID="feeCustom"
               />
-              {state.customFeeValue && /^\d+(\.\d+)?$/.test(state.customFeeValue) && Number(state.customFeeValue) > 0 && (
-                <Text style={stylesHook.satVbyteText}>{loc.units.sat_vbyte}</Text>
+              {state.customFeeValue && parseDisplayedFeeRate(state.customFeeValue) !== null && (
+                <Text style={stylesHook.satVbyteText}>{FEE_RATE_UNIT_LABEL}</Text>
               )}
             </View>
           </View>

@@ -1326,7 +1326,7 @@ export class AbstractHDElectrumWallet extends AbstractHDWallet {
 
     let tx;
     if (!skipSigning) {
-      tx = psbt.finalizeAllInputs().extractTransaction();
+      tx = psbt.finalizeAllInputs().extractTransaction(true);
     }
     return { tx, inputs, outputs, fee, psbt };
   }
@@ -1380,10 +1380,10 @@ export class AbstractHDElectrumWallet extends AbstractHDWallet {
 
     let extractedTransaction;
     try {
-      extractedTransaction = final1.finalizeAllInputs().extractTransaction();
+      extractedTransaction = final1.finalizeAllInputs().extractTransaction(true);
     } catch (_) {
       // probably already finalized
-      extractedTransaction = final1.extractTransaction();
+      extractedTransaction = final1.extractTransaction(true);
     }
 
     return extractedTransaction;
@@ -1554,7 +1554,7 @@ export class AbstractHDElectrumWallet extends AbstractHDWallet {
 
     let tx: BTransaction | false = false;
     if (this.calculateHowManySignaturesWeHaveFromPsbt(psbt) === psbt.inputCount) {
-      tx = psbt.finalizeAllInputs().extractTransaction();
+      tx = psbt.finalizeAllInputs().extractTransaction(true);
     }
 
     return { tx };

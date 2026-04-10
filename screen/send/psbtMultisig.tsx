@@ -225,8 +225,8 @@ const PsbtMultisig = () => {
     }
 
     try {
-      const tx = psbt.extractTransaction().toHex();
-      const satoshiPerByte = Math.round(getFee() / psbt.extractTransaction().virtualSize());
+      const tx = psbt.extractTransaction(true).toHex();
+      const satoshiPerByte = Math.round(getFee() / psbt.extractTransaction(true).virtualSize());
       navigate('Confirm', {
         fee: new BigNumber(getFee()).dividedBy(100000000).toNumber(),
         memo,

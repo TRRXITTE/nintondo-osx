@@ -55,7 +55,20 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.1'
-      
+
+      if target.name == 'fmt'
+        # Xcode 26's Apple clang currently rejects fmt's consteval format-string
+        # path for this pod. Building fmt itself as C++17 keeps it on the
+        # compatible non-consteval branch.
+        config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'
+        definitions = config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] || ['$(inherited)']
+        definitions = [definitions] unless definitions.is_a?(Array)
+        unless definitions.include?('FMT_USE_CONSTEVAL=0')
+          definitions << 'FMT_USE_CONSTEVAL=0'
+        end
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] = definitions
+      end
+
       if ['React-Core-AccessibilityResources'].include? target.name 
         config.build_settings['CODE_SIGN_STYLE'] = "Manual"
         config.build_settings['CODE_SIGN_IDENTITY'] = "Apple Distribution: Bluewallet Services, S. R. L. (A7W54YZ4WU)"

@@ -1,3 +1,5 @@
+Secure Nintondo wallet for managing cryptocurrency with ease.
+
 Features
 
 * Open Source

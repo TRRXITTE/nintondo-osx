@@ -144,10 +144,10 @@ zipalign -v 4 \
 ## App Store Listing Content
 
 ### Title
-Nintondo OSX - Dogecoin Wallet
+Nintondo OSX - NINTONDO Wallet
 
 ### Short Description
-Secure Dogecoin wallet for managing NINTONDO cryptocurrency with ease.
+Secure NINTONDO wallet for sending, receiving, and managing your coins.
 
 ### Full Description
 See `PLAY_STORE_METADATA.md`

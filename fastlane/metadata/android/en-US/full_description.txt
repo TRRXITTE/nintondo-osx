@@ -1,7 +1,8 @@
-A Bitcoin wallet that allows you to store, send Bitcoin, receive Bitcoin with focus on security and simplicity.
-On BlueWallet, a bitcoin wallet you own you private keys. A Bitcoin wallet made by Bitcoin users for the community.
-You can instantly transact with anyone in the world and transform the financial system right from your pocket.
-Create for free unlimited number of bitcoin wallets or import your existing one on your Android device. It's simple and fast.
+Secure Nintondo wallet for managing cryptocurrency with ease.
+
+Nintondo OSX lets you store, send, and receive Nintondo with a focus on security and simplicity.
+With Nintondo OSX, your private keys stay under your control for true self-custody.
+Create unlimited wallets for free or import an existing wallet on your Android device. Setup is simple and fast.
 _____
 
 Here's what you get:
@@ -9,30 +10,30 @@ Here's what you get:
 1 - Security by design
 
 • Open Source
-MIT licensed, you can build it and run it on your own! Made with ReactNative
+MIT licensed, fully auditable, and built with React Native.
 
 • Plausible deniability
-Password which decrypts fake bitcoin wallets if you are forced to disclose your access
+A separate password can open a decoy wallet if you are forced to disclose access.
 
 • Full encryption
-On top of the iOS multi-layer encryption, we encrypt everything with added passwords
+Your data stays encrypted on-device with layered protection.
 
-• SegWit & HD wallets
-SegWit supported and HD wallets enable
+• HD wallets
+Modern hierarchical deterministic wallets for structured address management.
 
 2 - Focused on your experience
 
 • Be in control
-Private keys never leave your device. You control your private keys
+Private keys never leave your device.
 
 • Flexible fees
-Starting from 1 Satoshi. Defined by you, the user
+Choose the network fee level that matches your urgency.
 
 • Replace-By-Fee
-(RBF) Speed-up your transactions by increasing the fee (BIP125)
+Adjust a transaction fee after broadcast when network conditions change.
 
 • Watch-only wallets
-Watch-only wallets allow you to keep an eye on your cold storage without touching the hardware.
+Keep an eye on cold storage without exposing spending keys.
 
-• Lightning Network
-Lightning wallet with zero-configuration. Unfairly cheap and fast transactions with the best Bitcoin user experience.
+• Fast payments
+Built for smooth everyday transfers and short confirmation targets.

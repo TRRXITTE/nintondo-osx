@@ -224,7 +224,7 @@ export class AbstractWallet {
       }
     }
 
-    this.secret = newSecret.trim().replace('bitcoin:', '').replace('BITCOIN:', '');
+    this.secret = newSecret.trim().replace(/^(bitcoin|nintondo):/i, '');
 
     if (this.secret.startsWith('BC1')) this.secret = this.secret.toLowerCase();
 

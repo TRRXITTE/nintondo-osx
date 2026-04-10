@@ -17,6 +17,19 @@ type TContext = {
 };
 
 type TBothBitcoinAndLightning = { bitcoin: string; lndInvoice: string } | undefined;
+const CANONICAL_ONCHAIN_SCHEME = 'nintondo';
+const LEGACY_ONCHAIN_SCHEME = 'bitcoin';
+const BITCOIN_MAINNET: bitcoin.networks.Network = {
+  messagePrefix: '\x18Bitcoin Signed Message:\n',
+  bech32: 'bc',
+  bip32: {
+    public: 0x0488b21e,
+    private: 0x0488ade4,
+  },
+  pubKeyHash: 0x00,
+  scriptHash: 0x05,
+  wif: 0x80,
+};
 
 class DeeplinkSchemaMatch {
   static hasSchema(schemaString: string): boolean {
@@ -52,7 +65,11 @@ class DeeplinkSchemaMatch {
       return;
     }
 
-    if (event.url.toLowerCase().startsWith('bluewallet:bitcoin:') || event.url.toLowerCase().startsWith('bluewallet:lightning:')) {
+    if (
+      event.url.toLowerCase().startsWith('bluewallet:bitcoin:') ||
+      event.url.toLowerCase().startsWith('bluewallet:nintondo:') ||
+      event.url.toLowerCase().startsWith('bluewallet:lightning:')
+    ) {
       event.url = event.url.substring(11);
     } else if (event.url.toLocaleLowerCase().startsWith('bluewallet://widget?action=')) {
       event.url = event.url.substring('bluewallet://'.length);
@@ -302,16 +319,33 @@ class DeeplinkSchemaMatch {
     }
   }
 
+  static hasOnchainScheme(value: string): boolean {
+    const normalizedValue = value.trim().replace('://', ':').toLowerCase();
+    return normalizedValue.startsWith('bitcoin:') || normalizedValue.startsWith('nintondo:');
+  }
+
+  static stripOnchainScheme(value: string): string {
+    return value
+      .trim()
+      .replace('://', ':')
+      .replace(/^(bitcoin|nintondo)(:|=)/i, '')
+      .split('?')[0];
+  }
+
   static isBitcoinAddress(address: string): boolean {
-    address = address.replace('://', ':').replace('bitcoin:', '').replace('BITCOIN:', '').replace('bitcoin=', '').replace('nintondo:', '').replace('NINTONDO:', '').replace('nintondo=', '').split('?')[0];
-    let isValidBitcoinAddress = false;
-    try {
-      bitcoin.address.toOutputScript(address);
-      isValidBitcoinAddress = true;
-    } catch (err) {
-      isValidBitcoinAddress = false;
+    address = DeeplinkSchemaMatch.stripOnchainScheme(address);
+    const networks = [BITCOIN_MAINNET, bitcoin.networks.bitcoin, (bitcoin.networks as Record<string, bitcoin.networks.Network>).nintondo].filter(
+      Boolean,
+    );
+
+    for (const network of networks) {
+      try {
+        bitcoin.address.toOutputScript(address, network);
+        return true;
+      } catch (_err) {}
     }
-    return isValidBitcoinAddress;
+
+    return false;
   }
 
   static isLightningInvoice(invoice: string): boolean {
@@ -349,20 +383,22 @@ class DeeplinkSchemaMatch {
   }
 
   static isBothBitcoinAndLightning(url: string): TBothBitcoinAndLightning {
-    if (url.includes('lightning') && (url.includes('bitcoin') || url.includes('BITCOIN'))) {
-      const txInfo = url.split(/(bitcoin:\/\/|BITCOIN:\/\/|bitcoin:|BITCOIN:|lightning:|lightning=|bitcoin=)+/);
+    if (url.toLowerCase().includes('lightning') && /(bitcoin|nintondo)/i.test(url)) {
+      const txInfo = url.split(/(bitcoin:\/\/|bitcoin:|bitcoin=|nintondo:\/\/|nintondo:|nintondo=|lightning:|lightning=)+/i);
       let btc: string | false = false;
       let lndInvoice: string | false = false;
       for (const [index, value] of txInfo.entries()) {
         try {
           // Inside try-catch. We dont wan't to  crash in case of an out-of-bounds error.
-          if (value.startsWith('bitcoin') || value.startsWith('BITCOIN')) {
-            btc = `bitcoin:${txInfo[index + 1]}`;
+          const valueLower = value.toLowerCase();
+          if (valueLower.startsWith('bitcoin') || valueLower.startsWith('nintondo')) {
+            const scheme = valueLower.startsWith('nintondo') ? CANONICAL_ONCHAIN_SCHEME : LEGACY_ONCHAIN_SCHEME;
+            btc = `${scheme}:${txInfo[index + 1]}`;
             if (!DeeplinkSchemaMatch.isBitcoinAddress(btc)) {
               btc = false;
               break;
             }
-          } else if (value.startsWith('lightning')) {
+          } else if (valueLower.startsWith('lightning')) {
             const lnpart = txInfo[index + 1].split('&').find(el => el.toLowerCase().startsWith('ln'));
             lndInvoice = `lightning:${lnpart}`;
             if (!this.isLightningInvoice(lndInvoice)) {
@@ -388,17 +424,14 @@ class DeeplinkSchemaMatch {
     if (!uri) {
       throw new Error('No URI provided');
     }
-    let replacedUri = uri;
-    for (const replaceMe of ['BITCOIN://', 'bitcoin://', 'BITCOIN:', 'NINTONDO://', 'nintondo://', 'NINTONDO:']) {
-      replacedUri = replacedUri.replace(replaceMe, 'bitcoin:');
-    }
+    const replacedUri = uri
+      .replace(/^(bitcoin|nintondo):\/\//i, `${LEGACY_ONCHAIN_SCHEME}:`)
+      .replace(/^(bitcoin|nintondo):/i, `${LEGACY_ONCHAIN_SCHEME}:`);
 
     return bip21.decode(replacedUri);
   }
 
   static bip21encode(address: string, options?: TOptions): string {
-    // NINTONDO: Legacy addresses only, no bech32 uppercase needed
-
     for (const key in options) {
       if (key === 'label' && String(options[key]).replace(' ', '').length === 0) {
         delete options[key];
@@ -407,7 +440,7 @@ class DeeplinkSchemaMatch {
         delete options[key];
       }
     }
-    return bip21.encode(address, options);
+    return bip21.encode(address, options).replace(/^bitcoin:/, `${CANONICAL_ONCHAIN_SCHEME}:`);
   }
 
   static decodeBitcoinUri(uri: string) {

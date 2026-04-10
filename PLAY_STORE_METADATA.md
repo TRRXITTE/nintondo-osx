@@ -1,16 +1,16 @@
 # Google Play Store Metadata
 
 ## App Title
-Nintondo OSX - Dogecoin Wallet
+Nintondo OSX - NINTONDO Wallet
 
 ## Short Description (80 characters max)
-Secure Dogecoin wallet for managing NINTONDO cryptocurrency with ease.
+Secure NINTONDO wallet for sending, receiving, and managing your coins.
 
 ## Full Description
 
-### Nintondo OSX - Your Secure Dogecoin Wallet
+### Nintondo OSX - Your Secure NINTONDO Wallet
 
-Nintondo OSX is a non-custodial, decentralized mobile wallet designed specifically for Dogecoin and NINTONDO cryptocurrency. Take full control of your digital assets with industry-leading security and ease of use.
+Nintondo OSX is a non-custodial, decentralized mobile wallet designed for the NINTONDO network. Take full control of your digital assets with industry-leading security and ease of use.
 
 ### Key Features
 
@@ -26,8 +26,8 @@ Nintondo OSX is a non-custodial, decentralized mobile wallet designed specifical
 
 ✅ **Legacy Address Support**
 - Standard P2PKH address format
-- Dogecoin compatibility
-- Maximum compatibility with exchanges
+- Broad exchange compatibility
+- NINTONDO network defaults
 
 ✅ **Real-Time Updates**
 - Live transaction tracking
@@ -48,7 +48,7 @@ Nintondo OSX is a non-custodial, decentralized mobile wallet designed specifical
 ✅ **Open Source**
 - Transparent codebase
 - Community-audited security
-- Based on proven Dogecoin protocol
+- Built on a proven Dogecoin-derived network design
 
 ### How It Works
 
@@ -106,7 +106,7 @@ Cryptocurrency transactions are irreversible. Please ensure you have backed up y
 **Version**: 0.100.02
 **Last Updated**: December 24, 2025
 
-Download Nintondo OSX today and join thousands of Dogecoin users managing their cryptocurrency securely and privately.
+Download Nintondo OSX today and manage your NINTONDO securely and privately.
 
 ## What's New in 0.100.02
 

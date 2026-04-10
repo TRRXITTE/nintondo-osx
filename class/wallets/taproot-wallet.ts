@@ -131,7 +131,7 @@ export class TaprootWallet extends SegwitBech32Wallet {
 
       // Finalize all inputs (will auto-detect Taproot)
       psbt.finalizeAllInputs();
-      tx = psbt.extractTransaction();
+      tx = psbt.extractTransaction(true);
     }
 
     return { tx, inputs, outputs, fee, psbt };

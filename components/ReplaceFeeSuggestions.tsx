@@ -3,6 +3,18 @@ import { View, Text, TextInput, TouchableOpacity, Keyboard, StyleSheet } from 'r
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BlueText } from '../BlueComponents';
 import loc, { formatStringAddTwoWhiteSpaces } from '../loc';
+import {
+  DEFAULT_SLOW_FEE_RATE,
+  displayFeeRateToRawFeeRate,
+  FEE_RATE_UNIT_LABEL,
+  FAST_CONFIRMATION_LABEL,
+  formatFeeRateWithUnit,
+  MEDIUM_CONFIRMATION_LABEL,
+  parseDisplayedFeeRate,
+  rawFeeRateToDisplayInput,
+  sanitizeFeeRateInput,
+  SLOW_CONFIRMATION_LABEL,
+} from '../models/feeRate';
 import NetworkTransactionFees, { NetworkTransactionFee, NetworkTransactionFeeType } from '../models/networkTransactionFees';
 import { useTheme } from './themes';
 import { DismissKeyboardInputAccessory, DismissKeyboardInputAccessoryViewID } from './DismissKeyboardInputAccessory';
@@ -12,10 +24,10 @@ interface ReplaceFeeSuggestionsProps {
   transactionMinimum?: number;
 }
 
-const ReplaceFeeSuggestions: React.FC<ReplaceFeeSuggestionsProps> = ({ onFeeSelected, transactionMinimum = 1 }) => {
+const ReplaceFeeSuggestions: React.FC<ReplaceFeeSuggestionsProps> = ({ onFeeSelected, transactionMinimum = DEFAULT_SLOW_FEE_RATE }) => {
   const [networkFees, setNetworkFees] = useState<NetworkTransactionFee | null>(null);
   const [selectedFeeType, setSelectedFeeType] = useState<NetworkTransactionFeeType>(NetworkTransactionFeeType.FAST);
-  const [customFeeValue, setCustomFeeValue] = useState<string>('1');
+  const [customFeeValue, setCustomFeeValue] = useState<string>(rawFeeRateToDisplayInput(DEFAULT_SLOW_FEE_RATE));
   const customTextInput = useRef<TextInput>(null);
   const { colors } = useTheme();
   const stylesHook = StyleSheet.create({
@@ -83,7 +95,7 @@ const ReplaceFeeSuggestions: React.FC<ReplaceFeeSuggestionsProps> = ({ onFeeSele
           selectedFee = networkFees.slowFee;
           break;
         case NetworkTransactionFeeType.CUSTOM:
-          selectedFee = Number(customFeeValue);
+          selectedFee = displayFeeRateToRawFeeRate(parseDisplayedFeeRate(customFeeValue) || 0);
           break;
       }
       onFeeSelected(selectedFee);
@@ -92,9 +104,13 @@ const ReplaceFeeSuggestions: React.FC<ReplaceFeeSuggestionsProps> = ({ onFeeSele
   };
 
   const handleCustomFeeChange = (customFee: string) => {
-    const sanitizedFee = customFee.replace(/[^0-9]/g, '');
+    const sanitizedFee = sanitizeFeeRateInput(customFee);
     setCustomFeeValue(sanitizedFee);
-    handleFeeSelection(NetworkTransactionFeeType.CUSTOM);
+    setSelectedFeeType(NetworkTransactionFeeType.CUSTOM);
+    const displayFeeRate = parseDisplayedFeeRate(sanitizedFee);
+    if (displayFeeRate !== null) {
+      onFeeSelected(displayFeeRateToRawFeeRate(displayFeeRate));
+    }
   };
 
   return (
@@ -103,21 +119,21 @@ const ReplaceFeeSuggestions: React.FC<ReplaceFeeSuggestionsProps> = ({ onFeeSele
         [
           {
             label: loc.send.fee_fast,
-            time: loc.send.fee_10m,
+            time: FAST_CONFIRMATION_LABEL,
             type: NetworkTransactionFeeType.FAST,
             rate: networkFees.fastestFee,
             active: selectedFeeType === NetworkTransactionFeeType.FAST,
           },
           {
             label: formatStringAddTwoWhiteSpaces(loc.send.fee_medium),
-            time: loc.send.fee_3h,
+            time: MEDIUM_CONFIRMATION_LABEL,
             type: NetworkTransactionFeeType.MEDIUM,
             rate: networkFees.mediumFee,
             active: selectedFeeType === NetworkTransactionFeeType.MEDIUM,
           },
           {
             label: loc.send.fee_slow,
-            time: loc.send.fee_1d,
+            time: SLOW_CONFIRMATION_LABEL,
             type: NetworkTransactionFeeType.SLOW,
             rate: networkFees.slowFee,
             active: selectedFeeType === NetworkTransactionFeeType.SLOW,
@@ -136,7 +152,7 @@ const ReplaceFeeSuggestions: React.FC<ReplaceFeeSuggestionsProps> = ({ onFeeSele
               </View>
             </View>
             <View style={styles.rateContainer}>
-              <Text style={stylesHook.rateText}>{rate} sat/byte</Text>
+              <Text style={stylesHook.rateText}>{formatFeeRateWithUnit(rate)}</Text>
             </View>
           </TouchableOpacity>
         ))}
@@ -151,21 +167,25 @@ const ReplaceFeeSuggestions: React.FC<ReplaceFeeSuggestionsProps> = ({ onFeeSele
         <View style={[styles.buttonContent, styles.customFeeInputContainer]}>
           <TextInput
             onChangeText={handleCustomFeeChange}
-            keyboardType="numeric"
+            keyboardType="decimal-pad"
             value={customFeeValue}
             ref={customTextInput}
-            maxLength={9}
+            maxLength={12}
             style={[styles.customFeeInput, stylesHook.customFeeInput]}
             onFocus={() => handleCustomFeeChange(customFeeValue)}
-            placeholder={loc.send.fee_satvbyte}
+            placeholder={FEE_RATE_UNIT_LABEL}
             placeholderTextColor="#81868e"
             inputAccessoryViewID={DismissKeyboardInputAccessoryViewID}
           />
           <DismissKeyboardInputAccessory />
-          <Text style={stylesHook.rateText}>sat/byte</Text>
+          <Text style={stylesHook.rateText}>{FEE_RATE_UNIT_LABEL}</Text>
         </View>
       </TouchableOpacity>
-      <BlueText style={stylesHook.alternativeText}>{loc.formatString(loc.send.fee_replace_minvb, { min: transactionMinimum })}</BlueText>
+      <BlueText style={stylesHook.alternativeText}>
+        {loc.formatString(loc.send.fee_replace_minvb, {
+          min: formatFeeRateWithUnit(transactionMinimum),
+        })}
+      </BlueText>
     </View>
   );
 };

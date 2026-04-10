@@ -1041,7 +1041,7 @@ export class MultisigHDWallet extends AbstractHDElectrumWallet {
 
     let tx;
     if (!skipSigning && this.howManySignaturesCanWeMake() >= this.getM()) {
-      tx = psbt.finalizeAllInputs().extractTransaction();
+      tx = psbt.finalizeAllInputs().extractTransaction(true);
     }
     return { tx, inputs, outputs, fee, psbt };
   }
@@ -1217,7 +1217,7 @@ export class MultisigHDWallet extends AbstractHDElectrumWallet {
     }
 
     if (this.calculateHowManySignaturesWeHaveFromPsbt(psbt) >= this.getM()) {
-      const tx = psbt.finalizeAllInputs().extractTransaction();
+      const tx = psbt.finalizeAllInputs().extractTransaction(true);
       return { tx };
     }
 

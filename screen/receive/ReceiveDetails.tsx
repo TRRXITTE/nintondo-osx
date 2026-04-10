@@ -27,6 +27,7 @@ import { useStorage } from '../../hooks/context/useStorage';
 import { useExtendedNavigation } from '../../hooks/useExtendedNavigation';
 import loc, { formatBalance } from '../../loc';
 import { BitcoinUnit, Chain } from '../../models/bitcoinUnits';
+import { FAST_CONFIRMATION_ETA, MEDIUM_CONFIRMATION_ETA, SLOW_CONFIRMATION_ETA } from '../../models/feeRate';
 import { ReceiveDetailsStackParamList } from '../../navigation/ReceiveDetailsStackParamList';
 import { CommonToolTipActions } from '../../typings/CommonToolTipActions';
 import { SuccessView } from '../send/success';
@@ -264,11 +265,11 @@ const ReceiveDetails = () => {
               const satPerVbyte = Math.round(tx.fee / rez[tx.tx_hash].vsize);
               const fees = await BlueElectrum.estimateFees();
               if (satPerVbyte >= fees.fast) {
-                setEta(loc.formatString(loc.transactions.eta_10m));
+                setEta(FAST_CONFIRMATION_ETA);
               } else if (satPerVbyte >= fees.medium) {
-                setEta(loc.formatString(loc.transactions.eta_3h));
+                setEta(MEDIUM_CONFIRMATION_ETA);
               } else {
-                setEta(loc.formatString(loc.transactions.eta_1d));
+                setEta(SLOW_CONFIRMATION_ETA);
               }
             }
           }

@@ -176,8 +176,8 @@
     "insert_custom_fee": "Insert fee",
     "fee_fast": "Fast",
     "fee_medium": "Medium",
-    "fee_replace_minvb": "The total fee rate (satoshi per vByte) you want to pay should be higher than {min} sat/vByte.",
-    "fee_satvbyte": "in sat/vByte",
+    "fee_replace_minvb": "The new fee rate should be higher than {min}.",
+    "fee_satvbyte": "in NINTONDO/kB",
     "fee_slow": "Slow",
     "header": "Send",
     "input_clear": "Clear",
@@ -212,7 +212,7 @@
     "about": "About",
     "about_awesome": "Built with the awesome",
     "about_backup": "Always backup your keys!",
-    "about_free": "BlueWallet is a free and open-source project. Crafted by Bitcoin users.",
+    "about_free": "Secure Nintondo wallet for managing cryptocurrency with ease.",
     "about_license": "MIT License",
     "about_release_notes": "Release notes",
     "about_review": "Leave us a review",
@@ -224,8 +224,8 @@
     "about_selftest_ok": "All internal tests have passed successfully. The wallet works well.",
     "about_sm_github": "GitHub",
     "about_sm_discord": "Discord Server",
-    "about_sm_telegram": "Telegram channel",
-    "about_sm_twitter": "Follow us on Twitter",
+    "about_sm_telegram": "Follow us on Telegram",
+    "about_sm_twitter": "Follow us on X",
     "privacy_temporary_screenshots": "Allow Screen Capture",
     "privacy_temporary_screenshots_instructions": "Screen capture protection will be temporarily turned off, enabling screenshots and screen recordings. The protection will automatically reactivate when you close and reopen BlueWallet.",
     "biometrics": "Biometrics",
@@ -387,7 +387,7 @@
     "watchOnlyWarningTitle": "Security warning",
     "watchOnlyWarningDescription": "Be cautious of scammers who often use “watch-only” wallets to deceive users. These wallets do not allow you to control or send funds; they only let you view the balance.",
     "custom_fee_warning_title": "Warning",
-    "custom_fee_warning_description": "Fees below 1 sat/vB are valid, but may not be relayed due to node policies."
+    "custom_fee_warning_description": "Fees below {min} may not be relayed due to Nintondo node policies."
   },
   "wallets": {
     "add_bitcoin": "Nintondo Nyan",
@@ -629,7 +629,7 @@
     "BTC": "BTC",
     "NINTONDO": "NINTONDO",
     "MAX": "Max",
-    "sat_vbyte": "sat/vByte",
+    "sat_vbyte": "NINTONDO/kB",
     "sats": "sats"
   },
   "addresses": {
@@ -684,7 +684,7 @@
     "notification_tx_unconfirmed": "Notification transaction is not confirmed yet, please wait",
     "failed_create_notif_tx": "Failed to create on-chain transaction",
     "onchain_tx_needed": "On-chain transaction needed",
-    "notif_tx_sent" : "Notification transaction sent. Please wait for it to confirm",
+    "notif_tx_sent": "Notification transaction sent. Please wait for it to confirm",
     "notif_tx": "Notification transaction",
     "not_found": "Payment code not found"
   }

@@ -7,7 +7,7 @@
       <key>signingStyle</key>
       <string>manual</string>
       <key>teamID</key>
-      <string>A7W54YZ4WU</string>
+      <string>MC52ZBYMUT</string>
       <key>uploadSymbols</key>
       <true/>
       <key>compileBitcode</key>
@@ -18,16 +18,14 @@
       <string>export</string>
       <key>provisioningProfiles</key>
       <dict>
-          <key>io.bluewallet.bluewallet</key>
-          <string>match AppStore io.bluewallet.bluewallet</string>
-          <key>io.bluewallet.bluewallet.watch</key>
-          <string>match AppStore io.bluewallet.bluewallet.watch</string>
-          <key>io.bluewallet.bluewallet.watch.extension</key>
-          <string>match AppStore io.bluewallet.bluewallet.watch.extension</string>
-          <key>io.bluewallet.bluewallet.Stickers</key>
-          <string>match AppStore io.bluewallet.bluewallet.Stickers</string>
-          <key>io.bluewallet.bluewallet.MarketWidget</key>
-          <string>match AppStore io.bluewallet.bluewallet.MarketWidget</string>
+          <key>io.nintondo.osx</key>
+          <string>match AppStore io.nintondo.osx</string>
+          <key>io.nintondo.osx.watch</key>
+          <string>match AppStore io.nintondo.osx.watch</string>
+          <key>io.nintondo.osx.Stickers</key>
+          <string>match AppStore io.nintondo.osx.Stickers</string>
+          <key>io.nintondo.osx.MarketWidget</key>
+          <string>match AppStore io.nintondo.osx.MarketWidget</string>
       </dict>
   </dict>
 </plist>

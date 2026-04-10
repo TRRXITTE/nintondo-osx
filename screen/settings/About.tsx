@@ -57,29 +57,33 @@ const About: React.FC = () => {
   };
 
   const handleOnTwitterPress = () => {
-    Linking.openURL('https://twitter.com/bluewalletio');
-  };
-
-  const handleOnDiscordPress = () => {
-    Linking.openURL('https://discord.gg/btWq2Aby2z');
+    Linking.openURL('https://x.com/trrxitte');
   };
 
   const handleOnTelegramPress = () => {
-    Linking.openURL('https://t.me/bluewallethat');
+    Linking.openURL('https://t.me/nintondo');
   };
 
   const handleOnGithubPress = () => {
-    Linking.openURL('https://github.com/BlueWallet/BlueWallet');
+    Linking.openURL('https://github.com/TRRXITTE/nintondo-osx');
+  };
+
+  const handleOnSupportPress = () => {
+    Linking.openURL('mailto:integration@trrxitte.com');
+  };
+
+  const handleOnBugReportPress = () => {
+    Linking.openURL('mailto:nintondo-osx@trrxitte.com');
   };
 
   const handleOnRatePress = () => {
     const options = {
       AppleAppID: '1376878040',
-      GooglePackageName: 'io.bluewallet.bluewallet',
+      GooglePackageName: 'io.nintondo.osx',
       preferredAndroidMarket: AndroidMarket.Google,
       preferInApp: Platform.OS !== 'android',
       openAppStoreIfInAppFails: true,
-      fallbackPlatformURL: 'https://bluewallet.io',
+      fallbackPlatformURL: 'https://github.com/TRRXITTE/nintondo-osx',
     };
     Rate.rate(options, success => {
       if (success) {
@@ -92,7 +96,7 @@ const About: React.FC = () => {
     <SafeAreaScrollView testID="AboutScrollView" contentInsetAdjustmentBehavior="automatic" automaticallyAdjustContentInsets>
       <BlueCard>
         <View style={styles.center}>
-          <Image style={styles.logo} source={require('../../img/bluebeast.png')} />
+          <Image style={styles.logo} source={require('../../img/icon.png')} resizeMode="contain" />
           <Text style={styles.textFree}>{loc.settings.about_free}</Text>
           <Text style={[styles.textBackup, stylesHook.textBackup]}>{formatStringAddTwoWhiteSpaces(loc.settings.about_backup)}</Text>
           {((Platform.OS === 'android' && hasGmsSync()) || Platform.OS !== 'android') && (
@@ -102,9 +106,9 @@ const About: React.FC = () => {
       </BlueCard>
       <ListItem
         leftIcon={{
-          name: 'twitter',
-          type: 'font-awesome',
-          color: '#1da1f2',
+          name: 'x-twitter',
+          type: 'font-awesome-6',
+          color: '#000000',
         }}
         onPress={handleOnTwitterPress}
         title={loc.settings.about_sm_twitter}
@@ -113,29 +117,24 @@ const About: React.FC = () => {
         leftIcon={{
           name: 'telegram',
           type: 'font-awesome',
-          color: '#0088cc',
+          color: '#000000',
         }}
         onPress={handleOnTelegramPress}
         title={loc.settings.about_sm_telegram}
       />
-      <ListItem
-        leftIcon={{
-          name: 'discord',
-          type: 'font-awesome-5',
-          color: '#7289da',
-        }}
-        onPress={handleOnDiscordPress}
-        title={loc.settings.about_sm_discord}
-      />
+      {/* Discord intentionally hidden until the public server is ready again. */}
       <BlueCard>
         <View style={[styles.buildWith, stylesHook.buildWith]}>
           <BlueSpacing20 />
-          <BlueTextCentered>{loc.settings.about_awesome} 👍</BlueTextCentered>
+          <BlueTextCentered>Built to current Nintondo specifications</BlueTextCentered>
           <BlueSpacing20 />
           <BlueTextCentered>React Native</BlueTextCentered>
           <BlueTextCentered>bitcoinjs-lib</BlueTextCentered>
-          <BlueTextCentered>Nodejs</BlueTextCentered>
-          <BlueTextCentered>Electrum server</BlueTextCentered>
+          <BlueTextCentered>Node.js</BlueTextCentered>
+          <BlueTextCentered>ElectrumX</BlueTextCentered>
+          <BlueSpacing20 />
+          <BlueTextCentered>Source code</BlueTextCentered>
+          <BlueTextCentered>github.com/TRRXITTE/nintondo-osx</BlueTextCentered>
           <BlueSpacing20 />
           <Pressable
             accessibilityRole="button"
@@ -144,10 +143,30 @@ const About: React.FC = () => {
             style={({ pressed }) => [Platform.OS === 'ios' && pressed ? styles.pressed : null, styles.buttonLink, stylesHook.buttonLink]}
           >
             <Icon size={22} name="github" type="font-awesome-5" color={colors.foregroundColor} />
-            <Text style={[styles.textLink, stylesHook.textLink]}>{formatStringAddTwoWhiteSpaces(loc.settings.about_sm_github)}</Text>
+            <Text style={[styles.textLink, stylesHook.textLink]}>Open source repository</Text>
           </Pressable>
         </View>
       </BlueCard>
+      <ListItem
+        leftIcon={{
+          name: 'envelope',
+          type: 'font-awesome',
+          color: '#4CAF50',
+        }}
+        onPress={handleOnSupportPress}
+        title="Support"
+        subtitle="integration@trrxitte.com"
+      />
+      <ListItem
+        leftIcon={{
+          name: 'bug',
+          type: 'font-awesome',
+          color: '#FC0D44',
+        }}
+        onPress={handleOnBugReportPress}
+        title="Bug Reports"
+        subtitle="nintondo-osx@trrxitte.com"
+      />
       <ListItem
         leftIcon={{
           name: 'book',
@@ -252,12 +271,13 @@ const styles = StyleSheet.create({
     marginTop: 54,
   },
   logo: {
-    width: 102,
-    height: 124,
+    width: 112,
+    height: 112,
+    marginBottom: 24,
   },
   textFree: {
-    maxWidth: 260,
-    marginVertical: 24,
+    maxWidth: 280,
+    marginBottom: 24,
     color: '#9AA0AA',
     fontSize: 15,
     textAlign: 'center',

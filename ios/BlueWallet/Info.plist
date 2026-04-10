@@ -108,6 +108,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>bitcoin</string>
+				<string>nintondo</string>
 				<string>lightning</string>
 				<string>bluewallet</string>
 				<string>lapp</string>
@@ -335,7 +336,7 @@
 		</dict>
 	</array>
 	<key>WKCompanionAppBundleIdentifier</key>
-	<string>io.bluewallet.bluewallet</string>
+	<string>io.nintondo.osx</string>
 	<key>bugsnag</key>
 	<dict>
 		<key>apiKey</key>

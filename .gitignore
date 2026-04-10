@@ -26,6 +26,12 @@ DerivedData
 .cxx/
 *.keystore
 !debug.keystore
+*.jks
+*.p12
+*.p8
+*.mobileprovision
+android/app/google-services.json
+android/key.properties
 # Android/IntelliJ
 #
 build/
@@ -93,3 +99,17 @@ android/.project
 android/.settings/org.eclipse.buildship.core.prefs
 android/app/.classpath
 android/app/.project
+
+# Local workspace files
+*.code-workspace
+
+# Release artifacts
+dist/*.aab
+dist/*.apk
+
+# Xcode generated folders
+ios/derived-*/
+ios/ios/
+ios/build_logs/
+*.xcarchive
+*.xcresult

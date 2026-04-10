@@ -153,7 +153,7 @@ export class SegwitP2SHWallet extends LegacyWallet {
 
     let tx;
     if (!skipSigning) {
-      tx = psbt.finalizeAllInputs().extractTransaction();
+      tx = psbt.finalizeAllInputs().extractTransaction(true);
     }
     return { tx, inputs, outputs, fee, psbt };
   }

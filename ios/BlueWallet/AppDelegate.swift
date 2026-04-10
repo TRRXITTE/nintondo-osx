@@ -69,7 +69,14 @@ class AppDelegate: RCTAppDelegate, UNUserNotificationCenterDelegate {
 
     override func bundleURL() -> URL? {
         #if DEBUG
+        #if targetEnvironment(simulator)
         return RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
+        #else
+        // Device debug builds embed `main.jsbundle` during xcodebuild. Always
+        // use it on physical devices to avoid packager host resolution on the
+        // main thread during launch.
+        return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
+        #endif
         #else
         return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
         #endif

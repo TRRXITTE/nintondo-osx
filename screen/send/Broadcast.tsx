@@ -47,7 +47,7 @@ const Broadcast: React.FC = () => {
 
     try {
       // should be base64 encoded PSBT
-      const validTx = bitcoin.Psbt.fromBase64(scannedData).extractTransaction();
+      const validTx = bitcoin.Psbt.fromBase64(scannedData).extractTransaction(true);
       return handleUpdateTxHex(validTx.toHex());
     } catch (e) {}
   }, []);

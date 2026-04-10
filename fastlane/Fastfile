@@ -1,11 +1,10 @@
 # Define app identifiers once for reuse across lanes
 def app_identifiers
   [
-    "io.bluewallet.bluewallet",
-    "io.bluewallet.bluewallet.watch",
-    "io.bluewallet.bluewallet.watch.extension",
-    "io.bluewallet.bluewallet.Stickers",
-    "io.bluewallet.bluewallet.MarketWidget"
+    "io.nintondo.osx",
+    "io.nintondo.osx.watch",
+    "io.nintondo.osx.Stickers",
+    "io.nintondo.osx.MarketWidget"
   ]
 end
 
@@ -27,6 +26,44 @@ end
 default_platform(:android)
 project_root = File.expand_path("..", __dir__)
 
+def load_app_store_connect_api_key
+  api_key_id = ENV["APPLE_API_KEY_ID"] || ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"]
+  api_issuer_id = ENV["APPLE_API_ISSUER_ID"] || ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"]
+  api_key_path = [ENV["APPLE_API_KEY_PATH"], ENV["APP_STORE_CONNECT_API_KEY_PATH"]]
+                 .compact
+                 .find { |path| File.exist?(path) }
+
+  if api_key_path && api_key_id && api_issuer_id
+    return app_store_connect_api_key(
+      key_id: api_key_id,
+      issuer_id: api_issuer_id,
+      key_filepath: api_key_path,
+      duration: 1200,
+      in_house: false
+    )
+  end
+
+  json_key_path = File.expand_path("../appstore_api_key.json", __dir__)
+  return nil unless File.exist?(json_key_path)
+
+  require 'json'
+  json_key = JSON.parse(File.read(json_key_path))
+  json_key_id = json_key["key_id"] || api_key_id
+  json_issuer_id = json_key["issuer_id"] || api_issuer_id
+  json_key_content = json_key["key"]
+
+  return nil unless json_key_id && json_issuer_id && json_key_content
+
+  app_store_connect_api_key(
+    key_id: json_key_id,
+    issuer_id: json_issuer_id,
+    key_content: json_key_content,
+    is_key_content_base64: json_key["is_key_content_base64"] || false,
+    duration: 1200,
+    in_house: json_key["in_house"] || false
+  )
+end
+
 # Add session caching for App Store Connect
 def cached_app_store_connect_login
   # Skip if already authenticated and token is not expired
@@ -38,24 +75,17 @@ def cached_app_store_connect_login
   UI.message("Logging in to App Store Connect...")
   
   # Try API key authentication first
-  api_key_path = ENV["APPLE_API_KEY_PATH"] || "./appstore_api_key.json"
+  api_key = load_app_store_connect_api_key
   
-  if File.exist?(api_key_path) && ENV["APPLE_API_KEY_ID"] && ENV["APPLE_API_ISSUER_ID"]
+  if api_key
     UI.message("Using API key authentication for App Store Connect")
-    api_key = app_store_connect_api_key(
-      key_id: ENV["APPLE_API_KEY_ID"],
-      issuer_id: ENV["APPLE_API_ISSUER_ID"],
-      key_filepath: api_key_path,
-      duration: 1200, # 20 minute session
-      in_house: false
-    )
-    
+
     # Store the API key in lane context for reuse
     ENV["SPACESHIP_CONNECT_API_KEY"] = api_key
-    
+
     # Force App Store Connect API to use this key
     Spaceship::ConnectAPI.token = api_key
-    
+
     UI.success("Successfully authenticated with App Store Connect API Key")
     return true
   elsif ENV["FASTLANE_USER"] && ENV["FASTLANE_PASSWORD"]
@@ -491,9 +521,11 @@ platform :ios do
   UI.message("Uploading IPA to TestFlight from path: #{ipa_path}")
   UI.message("Changelog:\n#{changelog}")
 
+  api_key_path = File.join(project_root, "appstore_api_key.json")
+  UI.user_error!("App Store Connect API key JSON not found at path: #{api_key_path}") unless File.exist?(api_key_path)
 
   upload_to_testflight(
-    api_key_path: "./appstore_api_key.json",
+    api_key_path: api_key_path,
     ipa: ipa_path,
     skip_waiting_for_build_processing: true,
     changelog: changelog

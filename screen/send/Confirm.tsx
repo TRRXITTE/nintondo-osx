@@ -208,7 +208,7 @@ const Confirm: React.FC = () => {
         await payjoinClient.run();
         const payjoinPsbt = payJoinWallet.getPayjoinPsbt();
         if (payjoinPsbt) {
-          const txToWatch = payjoinPsbt.extractTransaction();
+          const txToWatch = payjoinPsbt.extractTransaction(true);
           txidsToWatch.push(txToWatch.getId());
         }
       }

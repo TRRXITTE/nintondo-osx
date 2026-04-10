@@ -77,7 +77,8 @@ export class HDLegacyP2PKHWallet extends AbstractHDElectrumWallet {
     );
 
     for (const u of this.getUtxo()) {
-      if (txhexes[u.txid]) u.txhex = txhexes[u.txid];
+      const hex = txhexes[u.txid];
+      if (hex && typeof hex === 'string') u.txhex = hex;
     }
   }
 

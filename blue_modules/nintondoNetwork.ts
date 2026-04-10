@@ -13,7 +13,7 @@ export const NINTONDO_ELECTRUM_DEFAULTS: ElectrumDefaults = {
 };
 
 export const NINTONDO_NETWORK: bitcoin.networks.Network = {
-  messagePrefix: '\x19Dogecoin Signed Message:\n',
+  messagePrefix: '\x19Nintondo Signed Message:\n',
   bech32: 'nt',
   bip32: {
     public: 0x02facafd,

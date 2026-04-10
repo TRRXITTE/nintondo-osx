@@ -1,10 +1,11 @@
 {
   "name": "nintondo-osx",
-  "version": "0.100.02",
+  "version": "0.100.04",
+  "author": "TRRXITTE",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/BlueWallet/BlueWallet.git"
+    "url": "https://github.com/TRRXITTE/nintondo-osx.git"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",

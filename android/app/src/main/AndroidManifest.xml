@@ -164,6 +164,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:scheme="bitcoin" />
+                <data android:scheme="nintondo" />
                 <data android:scheme="lightning" />
                 <data android:scheme="bluewallet" />
                 <data android:scheme="lapp" />

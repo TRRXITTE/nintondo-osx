@@ -10,8 +10,6 @@ export interface BlockExplorer {
 export const BLOCK_EXPLORERS: { [key: string]: BlockExplorer } = {
   default: { key: 'default', name: 'Mempool Nintondo', url: 'https://mempool.nintondo.trrxitte.com' },
   nintondo: { key: 'nintondo', name: 'Nintondo Index', url: 'https://index.nintondo.trrxitte.com' },
-  blockchair: { key: 'blockchair', name: 'Blockchair', url: 'https://blockchair.com/dogecoin' },
-  blockstream: { key: 'blockstream', name: 'Blockstream.info', url: 'https://blockstream.info' },
   custom: { key: 'custom', name: 'Custom', url: '' }, // Custom URL will be handled separately
 };
 

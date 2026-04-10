@@ -138,7 +138,8 @@ export class LegacyWallet extends AbstractWallet {
 
       const newUtxos = [];
       for (const u of this._utxo) {
-        if (txhexes[u.txid]) u.txhex = txhexes[u.txid];
+        const hex = txhexes[u.txid];
+        if (hex && typeof hex === 'string') u.txhex = hex;
         newUtxos.push(u);
       }
 
@@ -497,7 +498,7 @@ export class LegacyWallet extends AbstractWallet {
 
     let tx;
     if (!skipSigning) {
-      tx = psbt.finalizeAllInputs().extractTransaction();
+      tx = psbt.finalizeAllInputs().extractTransaction(true);
     }
     return { tx, inputs, outputs: sanitizedOutputs, fee, psbt };
   }

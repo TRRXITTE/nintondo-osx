@@ -17,6 +17,7 @@ import SafeArea from '../../components/SafeArea';
 import { useTheme } from '../../components/themes';
 import loc, { formatBalanceWithoutSuffix } from '../../loc';
 import { BitcoinUnit } from '../../models/bitcoinUnits';
+import { FAST_CONFIRMATION_ETA, MEDIUM_CONFIRMATION_ETA, SLOW_CONFIRMATION_ETA } from '../../models/feeRate';
 import { useStorage } from '../../hooks/context/useStorage';
 import { HandOffActivityType } from '../../components/types';
 import HeaderRightButton from '../../components/HeaderRightButton';
@@ -258,13 +259,13 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({ transaction, txid
           const fees = await BlueElectrum.estimateFees();
           console.debug('fees=', fees, 'satPerVbyte=', satPerVbyte);
           if (satPerVbyte >= fees.fast) {
-            setEta(loc.formatString(loc.transactions.eta_10m));
+            setEta(FAST_CONFIRMATION_ETA);
           }
           if (satPerVbyte >= fees.medium && satPerVbyte < fees.fast) {
-            setEta(loc.formatString(loc.transactions.eta_3h));
+            setEta(MEDIUM_CONFIRMATION_ETA);
           }
           if (satPerVbyte < fees.medium) {
-            setEta(loc.formatString(loc.transactions.eta_1d));
+            setEta(SLOW_CONFIRMATION_ETA);
           }
         } else if (txFromElectrum.confirmations && txFromElectrum.confirmations > 0) {
           // now, handling a case when tx became confirmed!

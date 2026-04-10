@@ -14,6 +14,16 @@ import { triggerWarningHapticFeedback } from './hapticFeedback';
 import { AlertButton } from 'react-native';
 import { uint8ArrayToHex, stringToUint8Array, hexToUint8Array } from './uint8array-extras/index';
 import { NINTONDO_ELECTRUM_DEFAULTS } from './nintondoNetwork';
+import {
+  DEFAULT_FAST_FEE_RATE,
+  DEFAULT_MEDIUM_FEE_RATE,
+  DEFAULT_SLOW_FEE_RATE,
+  FAST_CONFIRMATION_TARGET_BLOCKS,
+  MEDIUM_CONFIRMATION_TARGET_BLOCKS,
+  nodeFeeRateToRawFeeRate,
+  RECOMMENDED_MIN_FEE_RATE,
+  SLOW_CONFIRMATION_TARGET_BLOCKS,
+} from '../models/feeRate';
 
 const ElectrumClient = require('electrum-client');
 const net = require('net');
@@ -84,7 +94,11 @@ export const ELECTRUM_SSL_PORT = 'electrum_ssl_port';
 export const ELECTRUM_SERVER_HISTORY = 'electrum_server_history';
 const ELECTRUM_CONNECTION_DISABLED = 'electrum_disabled';
 const storageKey = 'ELECTRUM_PEERS';
-const defaultPeer: Peer = { host: NINTONDO_ELECTRUM_DEFAULTS.host, ssl: NINTONDO_ELECTRUM_DEFAULTS.ssl, tcp: NINTONDO_ELECTRUM_DEFAULTS.tcp };
+const defaultPeer: Peer = {
+  host: NINTONDO_ELECTRUM_DEFAULTS.host,
+  ssl: NINTONDO_ELECTRUM_DEFAULTS.ssl,
+  tcp: NINTONDO_ELECTRUM_DEFAULTS.tcp,
+};
 const extraPeers: Peer[] = [
   { host: 'en.nintondo.trrxitte.com', tcp: 50001, ssl: 50002 },
   { host: 'eu.nintondo.trrxitte.com', tcp: 50001, ssl: 50002 },
@@ -143,6 +157,23 @@ async function _getRealm() {
   return _realm;
 }
 
+function getKnownPeerByHost(host?: string | null): Peer | undefined {
+  if (!host) return undefined;
+  return hardcodedPeers.find(peer => peer.host === host);
+}
+
+function normalizePeer(peer: Peer): Peer {
+  const knownPeer = getKnownPeerByHost(peer.host);
+  if (knownPeer?.ssl) {
+    return {
+      host: peer.host,
+      ssl: peer.ssl ?? knownPeer.ssl,
+    };
+  }
+
+  return peer;
+}
+
 export const getPreferredServer = async (): Promise<ElectrumServerItem | undefined> => {
   try {
     await DefaultPreference.setName(GROUP_IO_BLUEWALLET);
@@ -157,11 +188,11 @@ export const getPreferredServer = async (): Promise<ElectrumServerItem | undefin
       return;
     }
 
-    return {
+    return normalizePeer({
       host,
       tcp: tcpPort ? Number(tcpPort) : undefined,
       ssl: sslPort ? Number(sslPort) : undefined,
-    };
+    });
   } catch (error) {
     console.error('Error in getPreferredServer:', error);
     return undefined;
@@ -232,11 +263,11 @@ async function getSavedPeer(): Promise<Peer | null> {
     }
 
     if (sslPort) {
-      return { host, ssl: Number(sslPort) };
+      return normalizePeer({ host, ssl: Number(sslPort) });
     }
 
     if (tcpPort) {
-      return { host, tcp: Number(tcpPort) };
+      return normalizePeer({ host, tcp: Number(tcpPort) });
     }
 
     return null;
@@ -959,8 +990,12 @@ export async function multiGetTransactionByTxid<T extends boolean>(
         // response too large
         // lets do single call, that should go through okay:
         txdata.result = await mainClient.blockchainTransaction_get(txdata.param, false);
-        // since we used VERBOSE=false, server sent us plain txhex which we must decode on our end:
-        txdata.result = txhexToElectrumTransaction(txdata.result);
+        if (verbose) {
+          // verbose was requested but response was too large; we fetched non-verbose (raw txhex)
+          // and must decode it on our end:
+          txdata.result = txhexToElectrumTransaction(txdata.result);
+        }
+        // if verbose=false, txdata.result is already the raw txhex string — keep it as-is
       }
       ret[txdata.param] = txdata.result;
       // @ts-ignore: hex property
@@ -1090,7 +1125,7 @@ export const calcEstimateFeeFromFeeHistorgam = function (numberOfBlocks: number,
   return Math.round(percentile(histogramFlat, 0.5) || 1);
 };
 
-const MIN_FEE_RATE = 100; // minimum sat/byte we allow for wallet-suggested fees (Dogecoin compatible)
+const MIN_FEE_RATE = RECOMMENDED_MIN_FEE_RATE; // 0.01 NINTONDO/kB, aligned with Nyancoin block/wallet defaults.
 
 export const estimateFees = async function (): Promise<{ fast: number; medium: number; slow: number }> {
   let histogram;
@@ -1105,22 +1140,30 @@ export const estimateFees = async function (): Promise<{ fast: number; medium: n
   }
 
   // fetching what electrum (which uses bitcoin core) thinks about fees:
-  const _fast = await estimateFee(1);
-  const _medium = await estimateFee(18);
-  const _slow = await estimateFee(144);
+  const _fast = await estimateFee(FAST_CONFIRMATION_TARGET_BLOCKS);
+  const _medium = await estimateFee(MEDIUM_CONFIRMATION_TARGET_BLOCKS);
+  const _slow = await estimateFee(SLOW_CONFIRMATION_TARGET_BLOCKS);
 
   /**
    * sanity check, see
    * @see https://github.com/cculianu/Fulcrum/issues/197
    * (fallback to bitcoin core estimates)
    */
-  if (!histogram || histogram?.[0]?.[0] > 1000) return { fast: _fast, medium: _medium, slow: _slow };
+  // Electrum fee histograms are already reported in per-byte units, so avoid converting
+  // the wallet threshold to kB units here or the sanity check becomes too loose.
+  if (!histogram || histogram?.[0]?.[0] > DEFAULT_FAST_FEE_RATE) {
+    return {
+      fast: Math.max(_fast, DEFAULT_FAST_FEE_RATE),
+      medium: Math.max(_medium, DEFAULT_MEDIUM_FEE_RATE),
+      slow: Math.max(_slow, DEFAULT_SLOW_FEE_RATE),
+    };
+  }
 
   // calculating fast fees from mempool:
-  const fast = Math.max(MIN_FEE_RATE, calcEstimateFeeFromFeeHistorgam(1, histogram));
+  const fast = Math.max(DEFAULT_FAST_FEE_RATE, calcEstimateFeeFromFeeHistorgam(FAST_CONFIRMATION_TARGET_BLOCKS, histogram));
   // recalculating medium and slow fees using bitcoincore estimations only like relative weights:
-  const medium = Math.max(MIN_FEE_RATE, Math.round((fast * _medium) / _fast));
-  const slow = Math.max(MIN_FEE_RATE, Math.round((fast * _slow) / _fast));
+  const medium = Math.max(DEFAULT_MEDIUM_FEE_RATE, Math.round((fast * _medium) / Math.max(_fast, 1)));
+  const slow = Math.max(MIN_FEE_RATE, Math.round((fast * _slow) / Math.max(_fast, 1)));
   return { fast, medium, slow };
 };
 
@@ -1128,14 +1171,14 @@ export const estimateFees = async function (): Promise<{ fast: number; medium: n
  * Returns the estimated transaction fee to be confirmed within a certain number of blocks
  *
  * @param numberOfBlocks {number} The number of blocks to target for confirmation
- * @returns {Promise<number>} Satoshis per byte
+ * @returns {Promise<number>} Atomic units per byte, converted from the node's NINTONDO/kB fee rate
  */
 export const estimateFee = async function (numberOfBlocks: number): Promise<number> {
   if (!mainClient) throw new Error('Electrum client is not connected');
   numberOfBlocks = numberOfBlocks || 1;
   const coinUnitsPerKilobyte = await mainClient.blockchainEstimatefee(numberOfBlocks);
-  if (coinUnitsPerKilobyte === -1) return 1;
-  return Math.round(new BigNumber(coinUnitsPerKilobyte).dividedBy(1024).multipliedBy(100000000).toNumber());
+  if (coinUnitsPerKilobyte === -1) return MIN_FEE_RATE;
+  return nodeFeeRateToRawFeeRate(new BigNumber(coinUnitsPerKilobyte).multipliedBy(100000000).toNumber());
 };
 
 export const serverFeatures = async function () {
@@ -1161,23 +1204,23 @@ export const broadcastV2 = async function (hex: string): Promise<string> {
 export const estimateCurrentBlockheight = function (): number {
   if (latestBlock.height) {
     const timeDiff = Math.floor(+new Date() / 1000) - latestBlock.time;
-    const extraBlocks = Math.floor(timeDiff / (1.0 * 60)); // Dogecoin: 1-minute blocks
+    const extraBlocks = Math.floor(timeDiff / (1.0 * 60)); // Nintondo uses Dogecoin-style 1-minute blocks.
     return latestBlock.height + extraBlocks;
   }
 
   const baseTs = 1587570465609; // uS
   const baseHeight = 627179;
-  return Math.floor(baseHeight + (+new Date() - baseTs) / 1000 / 60 / 1.0); // Dogecoin: 1-minute blocks
+  return Math.floor(baseHeight + (+new Date() - baseTs) / 1000 / 60 / 1.0); // Nintondo uses Dogecoin-style 1-minute blocks.
 };
 
 export const calculateBlockTime = function (height: number): number {
   if (latestBlock.height) {
-    return Math.floor(latestBlock.time + (height - latestBlock.height) * 1.0 * 60); // Dogecoin: 1-minute blocks
+    return Math.floor(latestBlock.time + (height - latestBlock.height) * 1.0 * 60); // Nintondo uses Dogecoin-style 1-minute blocks.
   }
 
   const baseTs = 1585837504; // sec
   const baseHeight = 624083;
-  return Math.floor(baseTs + (height - baseHeight) * 1.0 * 60); // Dogecoin: 1-minute blocks
+  return Math.floor(baseTs + (height - baseHeight) * 1.0 * 60); // Nintondo uses Dogecoin-style 1-minute blocks.
 };
 
 /**
