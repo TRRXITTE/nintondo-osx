@@ -4,7 +4,7 @@
 
 import WatchKit
 import Foundation
-import EFQRCode
+import CoreImage
 
 class ViewQRCodefaceController: WKInterfaceController {
   
@@ -55,14 +55,36 @@ class ViewQRCodefaceController: WKInterfaceController {
       return
     }
     DispatchQueue.global(qos: .userInteractive).async {
-      guard let cgImage = EFQRCode.generate(for: address) else {
+      guard let image = self.makeQRCodeImage(from: address) else {
         return
       }
       DispatchQueue.main.async {
-        let image = UIImage(cgImage: cgImage)
         self.imageInterface.setImage(image)
       }
     }
+  }
+
+  private func makeQRCodeImage(from content: String) -> UIImage? {
+    guard let data = content.data(using: .utf8),
+          let filter = CIFilter(name: "CIQRCodeGenerator") else {
+      return nil
+    }
+
+    filter.setValue(data, forKey: "inputMessage")
+    filter.setValue("M", forKey: "inputCorrectionLevel")
+
+    guard let outputImage = filter.outputImage else {
+      return nil
+    }
+
+    let scaledImage = outputImage.transformed(by: CGAffineTransform(scaleX: 6, y: 6))
+    let context = CIContext()
+
+    guard let cgImage = context.createCGImage(scaledImage, from: scaledImage.extent) else {
+      return nil
+    }
+
+    return UIImage(cgImage: cgImage)
   }
 
   @IBAction @objc func toggleViewButtonPressed() {

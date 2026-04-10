@@ -7,7 +7,7 @@
 import WatchKit
 import WatchConnectivity
 import Foundation
-import EFQRCode
+import CoreImage
 
 class ReceiveInterfaceController: WKInterfaceController {
 
@@ -59,14 +59,36 @@ class ReceiveInterfaceController: WKInterfaceController {
 
     private func generateQRCode(from content: String) {
         DispatchQueue.global(qos: .userInteractive).async {
-          guard let cgImage = EFQRCode.generate(for: content) else { return }
+          guard let image = self.makeQRCodeImage(from: content) else { return }
             DispatchQueue.main.async {
-                let image = UIImage(cgImage: cgImage)
                 self.imageInterface.setImage(image)
                 self.loadingIndicator.setHidden(true)
                 self.imageInterface.setHidden(false)
             }
         }
+    }
+
+    private func makeQRCodeImage(from content: String) -> UIImage? {
+      guard let data = content.data(using: .utf8),
+            let filter = CIFilter(name: "CIQRCodeGenerator") else {
+        return nil
+      }
+
+      filter.setValue(data, forKey: "inputMessage")
+      filter.setValue("M", forKey: "inputCorrectionLevel")
+
+      guard let outputImage = filter.outputImage else {
+        return nil
+      }
+
+      let scaledImage = outputImage.transformed(by: CGAffineTransform(scaleX: 6, y: 6))
+      let context = CIContext()
+
+      guard let cgImage = context.createCGImage(scaledImage, from: scaledImage.extent) else {
+        return nil
+      }
+
+      return UIImage(cgImage: cgImage)
     }
 
     private func setupMenuItems() {
@@ -101,4 +123,3 @@ class ReceiveInterfaceController: WKInterfaceController {
         userActivity.invalidate()
     }
 }
-
