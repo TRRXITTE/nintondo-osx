@@ -3,15 +3,15 @@ export const BYTES_PER_KILOBYTE = 1000;
 export const FEE_RATE_UNIT_LABEL = 'NINTONDO/kB';
 export const DISPLAY_FEE_RATE_PRECISION = 4;
 
-// Nyancoin/Nintondo node policy:
-// - recommended wallet / block minimum fee: 0.01 NINTONDO/kB
-// - minimum relay fee: 0.001 NINTONDO/kB
-export const RECOMMENDED_MIN_FEE_RATE = 1000;
-export const MIN_RELAY_FEE_RATE = 100;
-export const INCREMENTAL_RELAY_FEE_RATE = 10;
+// Nintondo node policy:
+// - recommended wallet / block minimum fee: 2.5 NINTONDO/kB
+// - minimum relay fee: 1.0 NINTONDO/kB
+export const RECOMMENDED_MIN_FEE_RATE = 250000; // 2.5 NINTONDO/kB
+export const MIN_RELAY_FEE_RATE = 100000;       // 1.0 NINTONDO/kB
+export const INCREMENTAL_RELAY_FEE_RATE = 10000; // 0.1 NINTONDO/kB
 
-// Mobile presets mapped from Nyancoin/Nintondo node style presets:
-// MINIMUM = 1x, MORE = 2x, WOW = 5x of the recommended minimum fee.
+// Mobile presets mapped from Nintondo node fee tiers:
+// MINIMUM = 1x (2.5), MORE = 2x (5.0), WOW = 5x (12.5) NINTONDO/kB
 export const DEFAULT_SLOW_FEE_RATE = RECOMMENDED_MIN_FEE_RATE;
 export const DEFAULT_MEDIUM_FEE_RATE = RECOMMENDED_MIN_FEE_RATE * 2;
 export const DEFAULT_FAST_FEE_RATE = RECOMMENDED_MIN_FEE_RATE * 5;
