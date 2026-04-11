@@ -3,18 +3,21 @@ export const BYTES_PER_KILOBYTE = 1000;
 export const FEE_RATE_UNIT_LABEL = 'NINTONDO/kB';
 export const DISPLAY_FEE_RATE_PRECISION = 4;
 
-// Nintondo node policy:
-// - recommended wallet / block minimum fee: 2.5 NINTONDO/kB
-// - minimum relay fee: 1.0 NINTONDO/kB
-export const RECOMMENDED_MIN_FEE_RATE = 250000; // 2.5 NINTONDO/kB
-export const MIN_RELAY_FEE_RATE = 100000;       // 1.0 NINTONDO/kB
-export const INCREMENTAL_RELAY_FEE_RATE = 10000; // 0.1 NINTONDO/kB
+// Fee structure aligned with electrum-nintondo-main/electrum/simple_config.py
+// All values are in sat/byte (electrum uses sat/kB — divide by 1000).
+//
+//   FEERATE_DEFAULT_RELAY        =  100,000 sat/kB →    100 sat/byte = 0.001 NINTONDO/kB
+//   FEERATE_FALLBACK_STATIC_FEE  = 10,000,000 sat/kB → 10,000 sat/byte = 0.1  NINTONDO/kB
+//   FEERATE_WARNING_HIGH_FEE     = 100,000,000 sat/kB → 100,000 sat/byte = 1.0  NINTONDO/kB
+//   FEERATE_MAX_DYNAMIC          = 500,000,000 sat/kB → 500,000 sat/byte = 5.0  NINTONDO/kB
+export const RECOMMENDED_MIN_FEE_RATE = 10000;  // FEERATE_FALLBACK_STATIC_FEE  0.1  NINTONDO/kB
+export const MIN_RELAY_FEE_RATE = 100;           // FEERATE_DEFAULT_RELAY        0.001 NINTONDO/kB
+export const INCREMENTAL_RELAY_FEE_RATE = 100;   // same as relay floor
 
-// Mobile presets mapped from Nintondo node fee tiers:
-// MINIMUM = 1x (2.5), MORE = 2x (5.0), WOW = 5x (12.5) NINTONDO/kB
-export const DEFAULT_SLOW_FEE_RATE = RECOMMENDED_MIN_FEE_RATE;
-export const DEFAULT_MEDIUM_FEE_RATE = RECOMMENDED_MIN_FEE_RATE * 2;
-export const DEFAULT_FAST_FEE_RATE = RECOMMENDED_MIN_FEE_RATE * 5;
+// Mobile presets (slow = fallback static, medium = 2×, fast = warning threshold)
+export const DEFAULT_SLOW_FEE_RATE = RECOMMENDED_MIN_FEE_RATE;       // 0.1  NINTONDO/kB
+export const DEFAULT_MEDIUM_FEE_RATE = RECOMMENDED_MIN_FEE_RATE * 2; // 0.2  NINTONDO/kB
+export const DEFAULT_FAST_FEE_RATE = 100000;                          // 1.0  NINTONDO/kB (FEERATE_WARNING_HIGH_FEE)
 
 export const FAST_CONFIRMATION_TARGET_BLOCKS = 1;
 export const MEDIUM_CONFIRMATION_TARGET_BLOCKS = 6;
