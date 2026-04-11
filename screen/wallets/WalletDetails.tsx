@@ -107,6 +107,50 @@ const WalletDetails: React.FC = () => {
     fetchArkAddress();
   }, [wallet]);
 
+  const handleRescanTransactions = useCallback(async () => {
+    presentAlert({
+      title: loc.wallets.details_rescan_transactions,
+      message: loc.wallets.details_rescan_transactions_confirm,
+      buttons: [
+        {
+          text: loc.wallets.details_rescan_transactions_start,
+          onPress: async () => {
+            setIsLoading(true);
+            try {
+              // Clear transaction cache so full rescan happens
+              // @ts-expect-error: internal properties
+              if (wallet._txs_by_external_index !== undefined) wallet._txs_by_external_index = {};
+              // @ts-expect-error: internal properties
+              if (wallet._txs_by_internal_index !== undefined) wallet._txs_by_internal_index = {};
+              // @ts-expect-error: internal properties
+              if (wallet._txs_by_payment_code_index !== undefined) wallet._txs_by_payment_code_index = {};
+              // @ts-expect-error: internal properties
+              if (wallet._utxo !== undefined) wallet._utxo = [];
+              // Reset address gap so scanner starts from index 0
+              // @ts-expect-error: internal properties
+              if (wallet._next_free_address_index !== undefined) wallet._next_free_address_index = 0;
+              // @ts-expect-error: internal properties
+              if (wallet._next_free_change_address_index !== undefined) wallet._next_free_change_address_index = 0;
+              await wallet.fetchBalance();
+              await wallet.fetchTransactions();
+              await saveToDisk();
+              triggerHapticFeedback(HapticFeedbackTypes.NotificationSuccess);
+              presentAlert({ message: loc.wallets.details_rescan_transactions_done });
+            } catch (e: any) {
+              presentAlert({ message: e.message });
+            } finally {
+              setIsLoading(false);
+            }
+          },
+        },
+        {
+          text: loc._.cancel,
+          style: 'cancel',
+        },
+      ],
+    });
+  }, [saveToDisk, wallet]);
+
   const navigateToOverviewAndDeleteWallet = useCallback(async () => {
     setIsLoading(true);
     const deletionSucceeded = await handleWalletDeletion(wallet.getID());
@@ -677,6 +721,16 @@ const WalletDetails: React.FC = () => {
                   <>
                     <BlueSpacing20 />
                     <SecondButton onPress={navigateToSignVerify} testID="SignVerify" title={loc.addresses.sign_title} />
+                  </>
+                )}
+                {(wallet instanceof AbstractHDElectrumWallet || wallet.fetchTransactions) && (
+                  <>
+                    <BlueSpacing20 />
+                    <SecondButton
+                      onPress={handleRescanTransactions}
+                      testID="RescanTransactions"
+                      title={loc.wallets.details_rescan_transactions}
+                    />
                   </>
                 )}
                 <BlueSpacing20 />
